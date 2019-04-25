@@ -54,7 +54,7 @@ ap.add_argument(
 ap.add_argument(
     "-o",
     "--output",
-    default="videos/test1_result_fault.avi",
+    default="videos/test1_result_fault.mp4",
     help="path to optional output video file"
 )
 args = ap.parse_args()
@@ -108,7 +108,7 @@ while True:
         (H, W) = frame.shape[:2]
 
     if args.output is not None and writer is None:
-        fourcc = cv2.VideoWriter_fourcc(*"MPEG")
+        fourcc = cv2.VideoWriter_fourcc(*"MP4V")
         writer = cv2.VideoWriter(args.output, fourcc, 30, (W, H))
 
     # initialize the current status along with our list of bounding box
