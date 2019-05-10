@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 OPENCV_TRACKERS = {
     "csrt":         cv2.TrackerCSRT_create,
@@ -12,16 +13,21 @@ OPENCV_TRACKERS = {
 
 
 class TrackableObject:
-    def __init__(self, objectID, box, tracker, frame):
+    def __init__(self, objectID, box, tracker, frame, axis):
         self.objectID = objectID
         self.boxes = [box]
         self.centroids = []
         self.__appendCentroid()
-        self.disappeared = 0
         self.__createTracker(box, tracker, frame)
+        self.axis = axis
+        self.disappeared = 0
+        self.direction = 0
+        self.counted = False
 
     def matchSucceeded(self, box, tracker, frame):
         self.disappeared = 0
+        del self.boxes[-1]
+        del self.centroids[-1]
         self.boxes.append(box)
         self.__appendCentroid()
         self.__createTracker(box, tracker, frame)
@@ -38,9 +44,16 @@ class TrackableObject:
         (startX, startY, endX, endY) = self.boxes[-1]
         cX = int((startX + endX) / 2.0)
         cY = int((startY + endY) / 2.0)
-        self.centroids.append((cX, cY))
+        centroid = (cX, cY)
+        self.__updateDirection(centroid)
+        self.centroids.append(centroid)
 
     def __createTracker(self, box, tracker, frame):
         (startX, startY, endX, endY) = box.astype("int")
         self.tracker = OPENCV_TRACKERS[tracker]()
         self.tracker.init(frame, (startX, startY, endX - startX, endY - startY))
+
+    def __updateDirection(self, centroid):
+        if len(self.centroids) > 10:
+            x = [c[self.axis] for c in self.centroids]
+            self.direction = centroid[self.axis] - np.mean(x)
